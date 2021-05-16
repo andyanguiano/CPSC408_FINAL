@@ -8,6 +8,7 @@ import mysql.connector
 import csv
 import pandas as pd
 from pandas import DataFrame
+import datetime
 
 #connect to database with my specific login information
 db = mysql.connector.connect(
@@ -27,9 +28,10 @@ def test():
     #mycursor.execute("INSERT INTO Supplier(Name, Email, Country) VALUES('South Coast Parts', 'jondoe@scparts.com', 'United States')")
     #mycursor.execute("INSERT INTO Part(Name, Weight, SupplierID) VALUES('Black Bearing Ring', '0.5', 1)")
     #db.commit()
-    mycursor.execute("Describe Part")
+    mycursor.execute("Describe Invoice")
 
     print(mycursor.fetchall())
+    print(datetime.date.today())
 
 def menu():
     while True:
@@ -38,8 +40,8 @@ def menu():
         print("1. Display All Tables")
         print("2. Filter Through Data")
         print("3. Create New Records")
-        print("4. Delete a Student")
-        print("5. Search/Display students by Major, GPA, City, State or Advisor.")
+        print("4. ")
+        print("5. Generate Reports")
         print("6. Exit Program")
         choice = input("Enter the number of the option you would like to execute: ")
         if choice == "1":

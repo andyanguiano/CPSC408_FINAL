@@ -2,6 +2,7 @@
 import pandas as pd
 import mysql.connector
 from pandas import DataFrame
+import datetime
 
 #connect to database with my specific login information
 db = mysql.connector.connect(
@@ -247,10 +248,9 @@ def filterThrough(choice):
         print("Invalid Input. Please try again.")
 
 def createData(choice):
-    print("\n")
     if choice == "1":
         theName = input("Name: ")
-        theWeight = int(input("Weight: "))
+        theWeight = input("Weight: ")
 
         print("SUPPLIERS:")
         mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
@@ -260,7 +260,7 @@ def createData(choice):
         print(newDF)
         print("\n")
 
-        theSupplier = int(input("ID of the Supplier: "))
+        theSupplier = input("ID of the Supplier: ")
 
         mycursor.execute("SELECT * FROM Supplier WHERE isDeleted is NULL")
         if mycursor.fetchall() == []:
@@ -273,11 +273,115 @@ def createData(choice):
             newDF = df[['ID', 'Name', 'Email', 'Country']]
             print(newDF)
             print("\n")
-            theSupplier = int(input("ID of the Supplier: "))
+            theSupplier = input("ID of the Supplier: ")
 
-        mycursor.execute("INSERT INTO Part(Name, Weight, SupplierID) VALUES("+ theName + ","+ theWeight + ", " + theSupplier + ")")
+        mycursor.execute("INSERT INTO Part(Name, Weight, SupplierID) VALUES(%s, %s, %s)", (theName, theWeight, theSupplier))
+        db.commit()
+        print("Successfully Added.")
 
+    if choice == "2":
+        theName = input("Name: ")
+        theEmail = input("Email: ")
+        theCountry = input("Country: ")
 
+        mycursor.execute("INSERT INTO Supplier(Name, Email, Country) VALUES(%s, %s, %s)", (theName,theEmail, theCountry))
+        db.commit()
+        print("Successfully Added.")
+
+    if choice == "3":
+        theName = input("Name: ")
+        theEmail = input("Email: ")
+        while True:
+            thePhone = input("Phone Number: ")
+            pCount = 0
+            for l in thePhone:
+                pCount += 1
+                if pCount > 11:
+                    print("Invalid Input. PLease use up to 11 digits. Try Again")
+                    break
+            if pCount <= 11:
+                break
+
+        theAddress = input("Address: ")
+
+        mycursor.execute("INSERT INTO Customer(Name, Email, PhoneNumber, Address, numOrders) VALUES(%s, %s, %s, %s, %s)", (theName,theEmail,thePhone,theAddress,0))
+        db.commit()
+        print("Successfully Added.")
+
+    if choice == "4":
+        theName = input("Name: ")
+        theEmail = input("Email: ")
+
+        mycursor.execute("INSERT INTO Employee(Name, Email) VALUES(%s, %s)", (theName, theEmail))
+        db.commit()
+        print("Successfully Added.")
+
+    if choice == "5":
+        print("PARTS:")
+        mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+        print(df.loc[:, 'ID':'SupplierID'])
+        print("\n")
+
+        thePart = input("Part ID of Order: ")
+        mycursor.execute('SELECT * FROM Part WHERE ID = ' + thePart + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("PARTS:")
+            mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+            print(df.loc[:, 'ID':'SupplierID'])
+            print("\n")
+            thePart = input("Part ID of Order: ")
+
+        theCount = input("Order Amount: ")
+
+        print("EMPLOYEE:")
+        mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+        print(df.loc[:, 'ID':'Email'])
+        print("\n")
+
+        theEmployee = input("ID of the Employee who took order: ")
+        mycursor.execute('SELECT * FROM Employee WHERE ID = ' + theEmployee + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("EMPLOYEE:")
+            mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+            print(df.loc[:, 'ID':'Email'])
+            print("\n")
+            theEmployee = input("ID of the Employee who took order: ")
+
+        print("CUSTOMERS:")
+        mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+        print(df.loc[:, 'ID':'numOrders'])
+        print("\n")
+
+        theCustomer = input("ID of the Customer who made the order: ")
+        mycursor.execute('SELECT * FROM Customer WHERE ID = ' + theCustomer + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("CUSTOMERS:")
+            mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+            print(df.loc[:, 'ID':'numOrders'])
+            print("\n")
+            theCustomer = input("ID of the Customer who made the order: ")
+
+        mycursor.execute("INSERT INTO Invoice(PartID, Count, Date, Fulfilled, EmployeeID, CustomerID) VALUES(%s,%s,%s,%s,%s,%s)", (thePart,theCount,str(datetime.date.today()),0,theEmployee,theCustomer))
+        db.commit()
+        print("Successfully Added.")
 
 
 
