@@ -40,9 +40,10 @@ def menu():
         print("1. Display All Tables")
         print("2. Filter Through Data")
         print("3. Create New Records")
-        print("4. ")
-        print("5. Generate Reports")
-        print("6. Exit Program")
+        print("4. Edit Records")
+        print("5. Delete Records")
+        print("6. Generate Reports")
+        print("7. Exit Program")
         choice = input("Enter the number of the option you would like to execute: ")
         if choice == "1":
             print("\n")
@@ -55,11 +56,14 @@ def menu():
             createMenu()
         elif choice == "4":
             print("\n")
-            #deleteStudent()
+            editMenu()
         elif choice == "5":
             print("\n")
-            #searchStudent()
+            deleteMenu()
         elif choice == "6":
+            print("\n")
+            reportMenu()
+        elif choice == "7":
             print("\n")
             print("Exiting")
             #mycursor.execute('DELETE FROM Student')
@@ -113,3 +117,59 @@ def createMenu():
         return
 
 
+def editMenu():
+    print("Which table to edit records:")
+    print("1. Parts")
+    print("2. Suppliers")
+    print("3. Customers")
+    print("4. Employees")
+    print("5. Invoices")
+    print("6. Back to main menu")
+    choice = input("Enter the number of the option you would like to execute: ")
+    if choice != "6":
+        Helpers.editData(choice)
+        print("\n")
+        return
+    elif choice == "6":
+        return
+    else:
+        print("Invalid Option. Try Again")
+        editMenu()
+        return
+
+def deleteMenu():
+    print("Which table to delete records:")
+    print("1. Parts")
+    print("2. Suppliers")
+    print("3. Customers")
+    print("4. Employees")
+    print("5. Invoices")
+    print("6. Back to main menu")
+    choice = input("Enter the number of the option you would like to execute: ")
+    if choice != "6":
+        Helpers.deleteData(choice)
+        print("\n")
+        return
+    elif choice == "6":
+        return
+    else:
+        print("Invalid Option. Try Again")
+        deleteMenu()
+        return
+
+def reportMenu():
+    print("")
+    print("Reports to Export:")
+    print("")
+
+    choice = input("Enter the number of the option you would like to execute: ")
+    if choice != "6":
+        Helpers.generateReports(choice)
+        print("\n")
+        return
+    elif choice == "6":
+        return
+    else:
+        print("Invalid Option. Try Again")
+        reportMenu()
+        return

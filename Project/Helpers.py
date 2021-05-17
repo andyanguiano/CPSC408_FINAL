@@ -3,6 +3,7 @@ import pandas as pd
 import mysql.connector
 from pandas import DataFrame
 import datetime
+import csv
 
 #connect to database with my specific login information
 db = mysql.connector.connect(
@@ -51,7 +52,6 @@ def displayTables():
                    columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID', 'isDeleted'])
     print(df.loc[:, 'ID':'CustomerID'])
     print("\n")
-
 
 def filterThrough(choice):
     print("\n")
@@ -105,23 +105,17 @@ def filterThrough(choice):
     elif choice == "2":
         print("Filter by country: ")
         print("SUPPLIERS:")
-        mycursor.execute('SELECT Country FROM Supplier WHERE isDeleted is NULL')
+        mycursor.execute('SELECT Country FROM Supplier WHERE isDeleted is NULL GROUP BY Country')
         records = mycursor.fetchall()
         df = DataFrame(records, columns=['Country'])
         print(df)
         print("\n")
         country = input("Country ID you would like to filter by (number): ")
-        try:
-            mycursor.execute('SELECT * FROM Supplier WHERE Country = ' + country)
-        except mysql.connector.Error:
-            print("Invalid Input. Please Try Again.")
-        except TypeError:
-            print("Invalid Input. Please Try Again.")
+        mycursor.execute('SELECT * FROM Supplier WHERE Country = ' + country + ' and isDeleted is NULL')
         records = mycursor.fetchall()
         if records == []:
             print("\n")
             print("Invalid Input. Please Try Again.")
-            filterThrough(choice)
             return
         else:
             print("\n")
@@ -383,11 +377,478 @@ def createData(choice):
         db.commit()
         print("Successfully Added.")
 
+def editData(choice):
+    if choice == "1":
+        print("PARTS:")
+        mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+        print(df.loc[:, 'ID':'SupplierID'])
+        print("\n")
 
+        IDChange = input("ID of Part to edit: ")
+        mycursor.execute('SELECT * FROM Part WHERE ID = ' + IDChange + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("PARTS:")
+            mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+            print(df.loc[:, 'ID':'SupplierID'])
+            print("\n")
+            IDChange = input("ID of Part to edit: ")
 
+        print("Options to edit: ")
+        print("1. Name")
+        print("2. Weight")
+        print("3. Supplier")
+        change = input("Enter the number of the option you would like to execute: ")
 
+        if change == "1":
+            newName = input("New name: ")
+            mycursor.execute("UPDATE Part SET Name = %s WHERE ID = %s", (newName, IDChange))
+            db.commit()
+            print("Successfully Updated")
+        elif change == "2":
+            try:
+                newWeight = int(input("New weight: "))
+            except ValueError:
+                print("Try again with only digits")
+                newWeight = input("New weight: ")
+            mycursor.execute("UPDATE Part SET Weight = %s WHERE ID = %s", (newWeight, IDChange))
+            db.commit()
+            print("Successfully Updated")
 
+        elif change == "3":
+            print("")
+            print("SUPPLIERS:")
+            mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+            newDF = df[['ID', 'Name', 'Email', 'Country']]
+            print(newDF)
+            print("\n")
 
+            theSupplier = input("ID of the new Supplier: ")
+            mycursor.execute("SELECT * FROM Supplier WHERE ID = " + theSupplier + " and isDeleted is NULL")
+            if mycursor.fetchall() == []:
+                print("Invalid ID. Try Again.")
+                print("\n")
+                print("SUPPLIERS:")
+                mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+                records = mycursor.fetchall()
+                df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+                newDF = df[['ID', 'Name', 'Email', 'Country']]
+                print(newDF)
+                print("\n")
+                theSupplier = input("ID of the new Supplier: ")
 
+            mycursor.execute("UPDATE Part SET SupplierID = %s WHERE ID = %s", (theSupplier, IDChange))
+            db.commit()
+            print("Successfully Updated")
+        else:
+            print("Invalid Input. Try Again")
 
+    if choice == "2":
+        print("SUPPLIERS:")
+        mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+        newDF = df[['ID', 'Name', 'Email', 'Country']]
+        print(newDF)
+        print("\n")
+
+        IDChange = input("ID of the Supplier to change: ")
+        mycursor.execute("SELECT * FROM Supplier WHERE ID = " + IDChange + " and isDeleted is NULL")
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("SUPPLIERS:")
+            mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+            newDF = df[['ID', 'Name', 'Email', 'Country']]
+            print(newDF)
+            print("\n")
+            IDChange = input("ID of the Supplier to change: ")
+
+        print("Options to edit: ")
+        print("1. Name")
+        print("2. Email")
+        print("3. Country")
+        change = input("Enter the number of the option you would like to execute: ")
+
+        if change == "1":
+            newName = input("New name: ")
+            mycursor.execute("UPDATE Supplier SET Name = %s WHERE ID = %s", (newName, IDChange))
+            db.commit()
+            print("Successfully Updated")
+        elif change == "2":
+            newEmail = input("New email: ")
+            mycursor.execute("UPDATE Supplier SET Email = %s WHERE ID = %s", (newEmail, IDChange))
+            db.commit()
+            print("Successfully Updated")
+        elif change == "3":
+            newCountry = input("New country: ")
+            mycursor.execute("UPDATE Supplier SET Country = %s WHERE ID = %s", (newCountry, IDChange))
+            db.commit()
+            print("Successfully Updated")
+        else:
+            print("Invalid Input. Try Again")
+
+    elif choice == "3":
+        print("CUSTOMERS:")
+        mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+        print(df.loc[:, 'ID':'numOrders'])
+        print("\n")
+
+        IDChange = input("ID of the Customer to change: ")
+        mycursor.execute('SELECT * FROM Customer WHERE ID = ' + IDChange + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("CUSTOMERS:")
+            mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+            print(df.loc[:, 'ID':'numOrders'])
+            print("\n")
+            IDChange = input("ID of the Customer to change: ")
+
+        print("Options to edit: ")
+        print("1. Name")
+        print("2. Email")
+        print("3. Phone Number")
+        print("4. Address")
+        print("5. numOrders")
+        change = input("Enter the number of the option you would like to execute: ")
+
+        if change == "1":
+            newName = input("New name: ")
+            mycursor.execute("UPDATE Customer SET Name = %s WHERE ID = %s", (newName, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "2":
+            newEmail = input("New email: ")
+            mycursor.execute("UPDATE Customer SET Email = %s WHERE ID = %s", (newEmail, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "3":
+            newPhone = input("New Phone Number: ")
+            while True:
+                newPhone = input("New Phone Number: ")
+                pCount = 0
+                for l in newPhone:
+                    pCount += 1
+                    if pCount > 11:
+                        print("Invalid Input. PLease use up to 11 digits. Try Again")
+                        break
+                if pCount <= 11:
+                    break
+
+            mycursor.execute("UPDATE Customer SET PhoneNumber = %s WHERE ID = %s", (newPhone, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "4":
+            newAddress = input("New Address: ")
+            mycursor.execute("UPDATE Customer SET Address = %s WHERE ID = %s", (newAddress, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "5":
+            newNumOrders = input("New number of orders: ")
+            mycursor.execute("UPDATE Customer SET numOrders = %s WHERE ID = %s", (newNumOrders, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        else:
+            print("Invalid Input. Please try again.")
+
+    elif choice == "4":
+        print("EMPLOYEES:")
+        mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+        print(df.loc[:, 'ID':'Email'])
+        print("\n")
+
+        IDChange = input("ID of the Employee to change: ")
+        mycursor.execute('SELECT * FROM Employee WHERE ID = ' + IDChange + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("EMPLOYEE:")
+            mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+            print(df.loc[:, 'ID':'Email'])
+            print("\n")
+            IDChange = input("ID of the Employee to change: ")
+
+        print("Options to edit: ")
+        print("1. Name")
+        print("2. Email")
+        change = input("Enter the number of the option you would like to execute: ")
+
+        if change == "1":
+            newName = input("New name: ")
+            mycursor.execute("UPDATE Employee SET Name = %s WHERE ID = %s", (newName, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "2":
+            newEmail = input("New email: ")
+            mycursor.execute("UPDATE Employee SET Email = %s WHERE ID = %s", (newEmail, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+    elif choice == "5":
+        print("INVOICE:")
+        mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records,
+                       columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID', 'isDeleted'])
+        print(df.loc[:, 'ID':'CustomerID'])
+        print("\n")
+
+        IDChange = input("ID of the Invoice to change: ")
+        mycursor.execute('SELECT * FROM Invoice WHERE ID = ' + IDChange + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("INVOICE:")
+            mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records,
+                           columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID',
+                                    'isDeleted'])
+            print(df.loc[:, 'ID':'CustomerID'])
+            print("\n")
+            IDChange = input("ID of the Invoice to change: ")
+
+        print("Options to edit: ")
+        print("1. Part Ordered")
+        print("2. Count of Order")
+        print("3. Fulfillment")
+        print("4. Customer")
+        change = input("Enter the number of the option you would like to execute: ")
+
+        if change == "1":
+            print("PARTS:")
+            mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+            print(df.loc[:, 'ID':'SupplierID'])
+            print("\n")
+
+            newIDPart = input("New Part ID of Order: ")
+            mycursor.execute('SELECT * FROM Part WHERE ID = ' + newIDPart + ' and isDeleted is NULL')
+            if mycursor.fetchall() == []:
+                print("Invalid ID. Try Again.")
+                print("\n")
+                print("PARTS:")
+                mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+                records = mycursor.fetchall()
+                df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+                print(df.loc[:, 'ID':'SupplierID'])
+                print("\n")
+                newIDPart = input("New Part ID of Order: ")
+
+            mycursor.execute("UPDATE Invoice SET PartID = %s WHERE ID = %s", (newIDPart, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "2":
+            newCount = input("New Count of the order: ")
+            mycursor.execute("UPDATE Invoice SET Count = %s WHERE ID = %s", (newCount, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+        elif change == "3":
+            while True:
+                ifFul = input("Is this order fulfilled(f) or not fulfilled(nf)")
+                if ifFul == "f":
+                    mycursor.execute("UPDATE Invoice SET Fulfilled = %s WHERE ID = %s", (1, IDChange))
+                    db.commit()
+                    print("Successfully Updated")
+                    break
+                elif ifFul == "nf":
+                    mycursor.execute("UPDATE Invoice SET Fulfilled = %s WHERE ID = %s", (0, IDChange))
+                    db.commit()
+                    print("Successfully Updated")
+                    break
+                else:
+                    print("Invalid input. Try Again.")
+
+        elif change == "4":
+            print("CUSTOMERS:")
+            mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+            print(df.loc[:, 'ID':'numOrders'])
+            print("\n")
+
+            newIDCust = input("ID of the new Customer: ")
+            mycursor.execute('SELECT * FROM Customer WHERE ID = ' + newIDCust + ' and isDeleted is NULL')
+            if mycursor.fetchall() == []:
+                print("Invalid ID. Try Again.")
+                print("\n")
+                print("CUSTOMERS:")
+                mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+                records = mycursor.fetchall()
+                df = DataFrame(records,
+                               columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+                print(df.loc[:, 'ID':'numOrders'])
+                print("\n")
+                newIDCust = input("ID of the new Customer: ")
+
+            mycursor.execute("UPDATE Invoice SET Customer = %s WHERE ID = %s", (newIDCust, IDChange))
+            db.commit()
+            print("Successfully Updated")
+
+    else:
+        print("Invalid Input. Try Again.")
+
+def deleteData(choice):
+    if choice == "1":
+        print("PARTS:")
+        mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+        print(df.loc[:, 'ID':'SupplierID'])
+        print("\n")
+
+        IDDelete = input("ID of Part to delete: ")
+        mycursor.execute('SELECT * FROM Part WHERE ID = ' + IDDelete + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("PARTS:")
+            mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
+            print(df.loc[:, 'ID':'SupplierID'])
+            print("\n")
+            IDDelete = input("ID of Part to edit: ")
+
+        mycursor.execute("UPDATE Part SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
+        db.commit()
+        print("Successfully Deleted")
+
+    elif choice == "2":
+        print("SUPPLIERS:")
+        mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+        newDF = df[['ID', 'Name', 'Email', 'Country']]
+        print(newDF)
+        print("\n")
+
+        IDDelete = input("ID of the Supplier to deelete: ")
+        mycursor.execute("SELECT * FROM Supplier WHERE ID = " + IDDelete + " and isDeleted is NULL")
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("SUPPLIERS:")
+            mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Email', 'Country', 'isDeleted', 'Name'])
+            newDF = df[['ID', 'Name', 'Email', 'Country']]
+            print(newDF)
+            print("\n")
+            IDDelete = input("ID of the Supplier to delete: ")
+
+        mycursor.execute("UPDATE Supplier SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
+        db.commit()
+        print("Successfully Deleted")
+
+    elif choice == "3":
+        print("CUSTOMERS:")
+        mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+        print(df.loc[:, 'ID':'numOrders'])
+        print("\n")
+
+        IDDelete = input("ID of the Customer to delete: ")
+        mycursor.execute('SELECT * FROM Customer WHERE ID = ' + IDDelete + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("CUSTOMERS:")
+            mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
+            print(df.loc[:, 'ID':'numOrders'])
+            print("\n")
+            IDDelete = input("ID of the Customer to delete: ")
+
+        mycursor.execute("UPDATE Customer SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
+        db.commit()
+        print("Successfully Deleted")
+
+    elif choice == "4":
+        print("EMPLOYEES:")
+        mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+        print(df.loc[:, 'ID':'Email'])
+        print("\n")
+
+        IDDelete = input("ID of the Employee to change: ")
+        mycursor.execute('SELECT * FROM Employee WHERE ID = ' + IDDelete + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("EMPLOYEE:")
+            mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records, columns=['ID', 'Name', 'Email', 'isDeleted'])
+            print(df.loc[:, 'ID':'Email'])
+            print("\n")
+            IDDelete = input("ID of the Employee to change: ")
+
+        mycursor.execute("UPDATE Employee SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
+        db.commit()
+        print("Successfully Deleted")
+
+    elif choice == "5":
+        print("INVOICE:")
+        mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
+        records = mycursor.fetchall()
+        df = DataFrame(records,
+                       columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID', 'isDeleted'])
+        print(df.loc[:, 'ID':'CustomerID'])
+        print("\n")
+
+        IDDelete = input("ID of the Invoice to delete: ")
+        mycursor.execute('SELECT * FROM Invoice WHERE ID = ' + IDDelete + ' and isDeleted is NULL')
+        if mycursor.fetchall() == []:
+            print("Invalid ID. Try Again.")
+            print("\n")
+            print("INVOICE:")
+            mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
+            records = mycursor.fetchall()
+            df = DataFrame(records,
+                           columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID',
+                                    'isDeleted'])
+            print(df.loc[:, 'ID':'CustomerID'])
+            print("\n")
+            IDDelete = input("ID of the Invoice to delete: ")
+
+        mycursor.execute("UPDATE Invoice SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
+        db.commit()
+        print("Successfully Deleted")
+
+    else:
+        print("Invalid Input. Try Again.")
+
+def generateReports(choice):
+    print("")
 
