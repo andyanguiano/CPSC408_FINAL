@@ -13,6 +13,7 @@ db = mysql.connector.connect(
     database="aanguiano_db2"
 )
 
+pd.set_option('display.max_columns', None)
 mycursor = db.cursor()
 
 def displayTables():
@@ -110,8 +111,11 @@ def filterThrough(choice):
         df = DataFrame(records, columns=['Country'])
         print(df)
         print("\n")
-        country = input("Country ID you would like to filter by (number): ")
-        mycursor.execute('SELECT * FROM Supplier WHERE Country = ' + country + ' and isDeleted is NULL')
+        #country = input("Country ID you would like to filter by (number): ")
+        #mycursor.execute('SELECT * FROM Supplier WHERE Country = ' + country + ' and isDeleted is NULL')
+        country = input("Country to filter by: ")
+        mycursor.execute("SELECT * FROM Supplier WHERE Country = '" + country + "' and isDeleted is NULL")
+
         records = mycursor.fetchall()
         if records == []:
             print("\n")
@@ -850,5 +854,60 @@ def deleteData(choice):
         print("Invalid Input. Try Again.")
 
 def generateReports(choice):
-    print("")
+    if choice == "1":
+        fileName = "unfulfilledOrders.csv"
+        mycursor.execute('SELECT ID,PartID, Count, Date, Fulfilled,EmployeeID, CustomerID FROM Invoice WHERE Fulfilled = 0 and isDeleted is NULL')
+        records = mycursor.fetchall()
+
+        file = open(fileName, "w")
+        add = csv.writer(file)
+
+        # adds the title row of all variables in datasheet
+        add.writerow(['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID'])
+        for rec in records:
+            add.writerow([rec[0],rec[1],rec[2],rec[3],rec[4],rec[5],rec[6]])
+
+        print("Successfully exported as 'unfulfilledOrders.csv'")
+        print("\n")
+
+    elif choice == "2":
+        fileName = "countryInvoices.csv"
+        print("SUPPLIERS:")
+        mycursor.execute('SELECT Country FROM Supplier WHERE isDeleted is NULL GROUP BY Country')
+        records = mycursor.fetchall()
+        df = DataFrame(records, columns=['Country'])
+        print(df)
+        print("\n")
+
+        country = input("Country to filter by: ")
+        mycursor.execute("SELECT * FROM Supplier WHERE Country = '" + country + "' and isDeleted is NULL")
+
+        records = mycursor.fetchall()
+        if records == []:
+            print("\n")
+            print("Invalid Input. Please Try Again.")
+            return
+        else:
+            print("\n")
+            mycursor.execute("SELECT Invoice.ID,PartID, Count, Date, Fulfilled,EmployeeID, CustomerID,Country FROM Invoice JOIN Part ON Invoice.PartID = Part.ID JOIN Supplier ON Part.SupplierID = Supplier.ID WHERE Fulfilled = 0 and Invoice.isDeleted is NULL and Supplier.isDeleted is NULL and Part.isDeleted is NULL and Country = '" + country + "'")
+            records = mycursor.fetchall()
+            file = open(fileName, "w")
+            if records == []:
+                print("\n")
+                print("There are no unfulfilled order from that country.")
+                return
+            else:
+                add = csv.writer(file)
+
+                # adds the title row of all variables in datasheet
+                add.writerow(['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID','Part Origin'])
+                for rec in records:
+                    add.writerow([rec[0], rec[1], rec[2], rec[3], rec[4], rec[5], rec[6], rec[7]])
+
+                print("Successfully exported as 'countryInvoices.csv'")
+                return
+    else:
+        print("Invalid Input. Try Again.")
+
+
 

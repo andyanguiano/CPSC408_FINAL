@@ -160,14 +160,25 @@ def deleteMenu():
 def reportMenu():
     print("")
     print("Reports to Export:")
-    print("")
+    print("1. All Unfulfilled Orders")
+    print("2. Invoices Requiring Parts from Certain Country")
+    print("3. Most Valuable Customers")
+    print("4. Back to main menu")
 
     choice = input("Enter the number of the option you would like to execute: ")
-    if choice != "6":
+    if choice == "4":
+        return
+    elif choice == "1":
         Helpers.generateReports(choice)
         print("\n")
         return
-    elif choice == "6":
+    elif choice == "2":
+        Helpers.generateReports(choice)
+        print("\n")
+        return
+    elif choice == "3":
+        Helpers.generateReports(choice)
+        print("\n")
         return
     else:
         print("Invalid Option. Try Again")
