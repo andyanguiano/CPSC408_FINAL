@@ -5,10 +5,6 @@
 #import necessary files
 import Helpers
 import mysql.connector
-import csv
-import pandas as pd
-from pandas import DataFrame
-import datetime
 
 #connect to database with my specific login information
 db = mysql.connector.connect(
@@ -18,21 +14,7 @@ db = mysql.connector.connect(
     database="aanguiano_db2"
 )
 
-def test():
-    mycursor = db.cursor()
-    #mycursor.execute("CREATE TABLE Supplier(ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(60), Email VARCHAR(80), Country VARCHAR(60), isDeleted SMALLINT)")
-    #db.commit()
-    #mycursor.execute("CREATE TABLE Invoice(ID INT PRIMARY KEY AUTO_INCREMENT, PartID INT, Count INT, Date DATE, Fulfilled SMALLINT, EmployeeID INT, CustomerID INT, isDeleted SMALLINT,"
-                     #"FOREIGN KEY (PartID) REFERENCES Part(ID), FOREIGN KEY (EmployeeID) REFERENCES Employee(ID), FOREIGN KEY (CustomerID) REFERENCES Customers(ID))")
-    #db.commit()
-    #mycursor.execute("INSERT INTO Supplier(Name, Email, Country) VALUES('South Coast Parts', 'jondoe@scparts.com', 'United States')")
-    #mycursor.execute("INSERT INTO Part(Name, Weight, SupplierID) VALUES('Black Bearing Ring', '0.5', 1)")
-    #db.commit()
-    mycursor.execute("Describe Invoice")
-
-    print(mycursor.fetchall())
-    print(datetime.date.today())
-
+# main menu
 def menu():
     while True:
         print("TOP ELECTRONICS")
@@ -75,6 +57,7 @@ def menu():
             print("\n")
             continue
 
+#menu for filters
 def filterMenu():
     print("Which table to filter through:")
     print("1. Parts")
@@ -95,7 +78,7 @@ def filterMenu():
         filterMenu()
         return
 
-
+#menu for creating data
 def createMenu():
     print("Which table to add to:")
     print("1. Parts")
@@ -116,7 +99,7 @@ def createMenu():
         createMenu()
         return
 
-
+#menu for editing data
 def editMenu():
     print("Which table to edit records:")
     print("1. Parts")
@@ -137,6 +120,7 @@ def editMenu():
         editMenu()
         return
 
+#menu for deleting data
 def deleteMenu():
     print("Which table to delete records:")
     print("1. Parts")
@@ -157,12 +141,13 @@ def deleteMenu():
         deleteMenu()
         return
 
+#menu for exporting reports
 def reportMenu():
     print("")
     print("Reports to Export:")
     print("1. All Unfulfilled Orders")
     print("2. Invoices Requiring Parts from Certain Country")
-    print("3. Most Valuable Customers")
+    print("3. Contact Information of customers for all Unfulfilled Orders")
     print("4. Back to main menu")
 
     choice = input("Enter the number of the option you would like to execute: ")

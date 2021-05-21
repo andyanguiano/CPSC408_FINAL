@@ -1,4 +1,8 @@
+#Andy Anguiano
+#CPSC408-01
+#FINAL
 
+#import necessary packages
 import pandas as pd
 import mysql.connector
 from pandas import DataFrame
@@ -13,9 +17,12 @@ db = mysql.connector.connect(
     database="aanguiano_db2"
 )
 
+#options to show all data in dataframe
 pd.set_option('display.max_columns', None)
+#cursor to execute queries
 mycursor = db.cursor()
 
+#displays all the tables in the DB
 def displayTables():
     print("PARTS:")
     mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
@@ -54,6 +61,7 @@ def displayTables():
     print(df.loc[:, 'ID':'CustomerID'])
     print("\n")
 
+#all the options to filter and execution of them
 def filterThrough(choice):
     print("\n")
     if choice == "1":
@@ -63,7 +71,7 @@ def filterThrough(choice):
         print("3. Weight greater than")
         theFilter = input("Enter the number of the option you would like to execute: ")
         print("\n")
-
+        #parts from certain supplier
         if theFilter == "1":
             print("SUPPLIERS:")
             mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
@@ -86,7 +94,7 @@ def filterThrough(choice):
                 df = DataFrame(records, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
                 print(df.loc[:, 'ID':'SupplierID'])
                 return
-
+        #weighs less than
         elif theFilter == "2":
             weight = input("Enter the Weight: ")
             mycursor.execute('SELECT * FROM Part WHERE Weight <= ' + weight)
@@ -94,7 +102,7 @@ def filterThrough(choice):
             print("PARTS:")
             df = DataFrame(output, columns=['ID', 'Name', 'Weight', 'SupplierID', 'isDeleted'])
             print(df.loc[:, 'ID':'SupplierID'])
-
+        #weighs more than
         elif theFilter == "3":
             weight = input("Enter the Weight: ")
             mycursor.execute('SELECT * FROM Part WHERE Weight >= ' + weight)
@@ -183,7 +191,7 @@ def filterThrough(choice):
 
         if theFilter == "1":
             print("INVOICE:")
-            mycursor.execute('SELECT * FROM Invoice WHERE Fulfilled = 0 and isDeleted is NULL')
+            mycursor.execute('SELECT * FROM Unfulfilled')
             records = mycursor.fetchall()
             df = DataFrame(records, columns=['ID', 'PartID', 'Count', 'Date', 'Fulfilled', 'EmployeeID', 'CustomerID', 'isDeleted'])
             print(df.loc[:, 'ID':'CustomerID'])
@@ -245,7 +253,9 @@ def filterThrough(choice):
     else:
         print("Invalid Input. Please try again.")
 
+#all the options to create data and execution of them
 def createData(choice):
+    #create a part
     if choice == "1":
         theName = input("Name: ")
         theWeight = input("Weight: ")
@@ -276,7 +286,7 @@ def createData(choice):
         mycursor.execute("INSERT INTO Part(Name, Weight, SupplierID) VALUES(%s, %s, %s)", (theName, theWeight, theSupplier))
         db.commit()
         print("Successfully Added.")
-
+    # create a supplier
     if choice == "2":
         theName = input("Name: ")
         theEmail = input("Email: ")
@@ -285,7 +295,7 @@ def createData(choice):
         mycursor.execute("INSERT INTO Supplier(Name, Email, Country) VALUES(%s, %s, %s)", (theName,theEmail, theCountry))
         db.commit()
         print("Successfully Added.")
-
+    # create a Customer
     if choice == "3":
         theName = input("Name: ")
         theEmail = input("Email: ")
@@ -305,7 +315,7 @@ def createData(choice):
         mycursor.execute("INSERT INTO Customer(Name, Email, PhoneNumber, Address, numOrders) VALUES(%s, %s, %s, %s, %s)", (theName,theEmail,thePhone,theAddress,0))
         db.commit()
         print("Successfully Added.")
-
+    # create a employee
     if choice == "4":
         theName = input("Name: ")
         theEmail = input("Email: ")
@@ -313,7 +323,7 @@ def createData(choice):
         mycursor.execute("INSERT INTO Employee(Name, Email) VALUES(%s, %s)", (theName, theEmail))
         db.commit()
         print("Successfully Added.")
-
+    # create a invoice
     if choice == "5":
         print("PARTS:")
         mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
@@ -358,10 +368,10 @@ def createData(choice):
             theEmployee = input("ID of the Employee who took order: ")
 
         print("CUSTOMERS:")
-        mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
+        mycursor.execute('SELECT ID, Name, Email, PhoneNumber FROM Customer WHERE isDeleted is NULL')
         records = mycursor.fetchall()
-        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber', 'Address', 'numOrders', 'isDeleted'])
-        print(df.loc[:, 'ID':'numOrders'])
+        df = DataFrame(records, columns=['ID', 'Name', 'Email', 'PhoneNumber'])
+        print(df.loc[:, 'ID':'PhoneNumber'])
         print("\n")
 
         theCustomer = input("ID of the Customer who made the order: ")
@@ -377,11 +387,14 @@ def createData(choice):
             print("\n")
             theCustomer = input("ID of the Customer who made the order: ")
 
+        mycursor.execute("UPDATE Customer SET numOrders = numOrders + 1 WHERE ID = " + theCustomer)
         mycursor.execute("INSERT INTO Invoice(PartID, Count, Date, Fulfilled, EmployeeID, CustomerID) VALUES(%s,%s,%s,%s,%s,%s)", (thePart,theCount,str(datetime.date.today()),0,theEmployee,theCustomer))
         db.commit()
         print("Successfully Added.")
 
+#all the options to edit data and execution of them
 def editData(choice):
+    #edit parts
     if choice == "1":
         print("PARTS:")
         mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
@@ -409,11 +422,13 @@ def editData(choice):
         print("3. Supplier")
         change = input("Enter the number of the option you would like to execute: ")
 
+        #change name
         if change == "1":
             newName = input("New name: ")
             mycursor.execute("UPDATE Part SET Name = %s WHERE ID = %s", (newName, IDChange))
             db.commit()
             print("Successfully Updated")
+        # change weight
         elif change == "2":
             try:
                 newWeight = int(input("New weight: "))
@@ -423,7 +438,7 @@ def editData(choice):
             mycursor.execute("UPDATE Part SET Weight = %s WHERE ID = %s", (newWeight, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change supplier
         elif change == "3":
             print("")
             print("SUPPLIERS:")
@@ -453,7 +468,7 @@ def editData(choice):
             print("Successfully Updated")
         else:
             print("Invalid Input. Try Again")
-
+    # edit suppliers
     if choice == "2":
         print("SUPPLIERS:")
         mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
@@ -482,17 +497,19 @@ def editData(choice):
         print("2. Email")
         print("3. Country")
         change = input("Enter the number of the option you would like to execute: ")
-
+        #change name
         if change == "1":
             newName = input("New name: ")
             mycursor.execute("UPDATE Supplier SET Name = %s WHERE ID = %s", (newName, IDChange))
             db.commit()
             print("Successfully Updated")
+        # change email
         elif change == "2":
             newEmail = input("New email: ")
             mycursor.execute("UPDATE Supplier SET Email = %s WHERE ID = %s", (newEmail, IDChange))
             db.commit()
             print("Successfully Updated")
+        # change country
         elif change == "3":
             newCountry = input("New country: ")
             mycursor.execute("UPDATE Supplier SET Country = %s WHERE ID = %s", (newCountry, IDChange))
@@ -500,7 +517,7 @@ def editData(choice):
             print("Successfully Updated")
         else:
             print("Invalid Input. Try Again")
-
+    # edit customers
     elif choice == "3":
         print("CUSTOMERS:")
         mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
@@ -529,19 +546,19 @@ def editData(choice):
         print("4. Address")
         print("5. numOrders")
         change = input("Enter the number of the option you would like to execute: ")
-
+        # change name
         if change == "1":
             newName = input("New name: ")
             mycursor.execute("UPDATE Customer SET Name = %s WHERE ID = %s", (newName, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change email
         elif change == "2":
             newEmail = input("New email: ")
             mycursor.execute("UPDATE Customer SET Email = %s WHERE ID = %s", (newEmail, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change phone number
         elif change == "3":
             newPhone = input("New Phone Number: ")
             while True:
@@ -558,13 +575,13 @@ def editData(choice):
             mycursor.execute("UPDATE Customer SET PhoneNumber = %s WHERE ID = %s", (newPhone, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change address
         elif change == "4":
             newAddress = input("New Address: ")
             mycursor.execute("UPDATE Customer SET Address = %s WHERE ID = %s", (newAddress, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change number of orders
         elif change == "5":
             newNumOrders = input("New number of orders: ")
             mycursor.execute("UPDATE Customer SET numOrders = %s WHERE ID = %s", (newNumOrders, IDChange))
@@ -574,6 +591,7 @@ def editData(choice):
         else:
             print("Invalid Input. Please try again.")
 
+    # edit employees
     elif choice == "4":
         print("EMPLOYEES:")
         mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
@@ -599,19 +617,19 @@ def editData(choice):
         print("1. Name")
         print("2. Email")
         change = input("Enter the number of the option you would like to execute: ")
-
+        # change name
         if change == "1":
             newName = input("New name: ")
             mycursor.execute("UPDATE Employee SET Name = %s WHERE ID = %s", (newName, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change email
         elif change == "2":
             newEmail = input("New email: ")
             mycursor.execute("UPDATE Employee SET Email = %s WHERE ID = %s", (newEmail, IDChange))
             db.commit()
             print("Successfully Updated")
-
+    # edit invoice
     elif choice == "5":
         print("INVOICE:")
         mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
@@ -642,7 +660,7 @@ def editData(choice):
         print("3. Fulfillment")
         print("4. Customer")
         change = input("Enter the number of the option you would like to execute: ")
-
+        # change part ordered
         if change == "1":
             print("PARTS:")
             mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
@@ -667,13 +685,13 @@ def editData(choice):
             mycursor.execute("UPDATE Invoice SET PartID = %s WHERE ID = %s", (newIDPart, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change count of order
         elif change == "2":
             newCount = input("New Count of the order: ")
             mycursor.execute("UPDATE Invoice SET Count = %s WHERE ID = %s", (newCount, IDChange))
             db.commit()
             print("Successfully Updated")
-
+        # change fulfillment
         elif change == "3":
             while True:
                 ifFul = input("Is this order fulfilled(f) or not fulfilled(nf)")
@@ -689,7 +707,7 @@ def editData(choice):
                     break
                 else:
                     print("Invalid input. Try Again.")
-
+        # change customer
         elif change == "4":
             print("CUSTOMERS:")
             mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
@@ -719,7 +737,9 @@ def editData(choice):
     else:
         print("Invalid Input. Try Again.")
 
+#all the options to edit data and execution of them
 def deleteData(choice):
+    #delete parts
     if choice == "1":
         print("PARTS:")
         mycursor.execute('SELECT * FROM Part WHERE isDeleted is NULL')
@@ -744,7 +764,7 @@ def deleteData(choice):
         mycursor.execute("UPDATE Part SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
         db.commit()
         print("Successfully Deleted")
-
+    # delete suppliers
     elif choice == "2":
         print("SUPPLIERS:")
         mycursor.execute('SELECT * FROM Supplier WHERE isDeleted is NULL')
@@ -771,7 +791,7 @@ def deleteData(choice):
         mycursor.execute("UPDATE Supplier SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
         db.commit()
         print("Successfully Deleted")
-
+    # delete customers
     elif choice == "3":
         print("CUSTOMERS:")
         mycursor.execute('SELECT * FROM Customer WHERE isDeleted is NULL')
@@ -796,7 +816,7 @@ def deleteData(choice):
         mycursor.execute("UPDATE Customer SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
         db.commit()
         print("Successfully Deleted")
-
+    # delete employees
     elif choice == "4":
         print("EMPLOYEES:")
         mycursor.execute('SELECT * FROM Employee WHERE isDeleted is NULL')
@@ -821,7 +841,7 @@ def deleteData(choice):
         mycursor.execute("UPDATE Employee SET isDeleted = %s WHERE ID = %s", (1, IDDelete))
         db.commit()
         print("Successfully Deleted")
-
+    # delete invoices
     elif choice == "5":
         print("INVOICE:")
         mycursor.execute('SELECT * FROM Invoice WHERE isDeleted is NULL')
@@ -853,7 +873,9 @@ def deleteData(choice):
     else:
         print("Invalid Input. Try Again.")
 
+
 def generateReports(choice):
+    #output report for all unfulfilled orders
     if choice == "1":
         fileName = "unfulfilledOrders.csv"
         mycursor.execute('SELECT ID,PartID, Count, Date, Fulfilled,EmployeeID, CustomerID FROM Invoice WHERE Fulfilled = 0 and isDeleted is NULL')
@@ -869,7 +891,7 @@ def generateReports(choice):
 
         print("Successfully exported as 'unfulfilledOrders.csv'")
         print("\n")
-
+    # output report for all unfulfilled invoices from a certain country
     elif choice == "2":
         fileName = "countryInvoices.csv"
         print("SUPPLIERS:")
@@ -906,6 +928,21 @@ def generateReports(choice):
 
                 print("Successfully exported as 'countryInvoices.csv'")
                 return
+    # output report for all customer contact info of unfulfilled orders
+    elif choice == "3":
+        fileName = "unfulfilledCustomers.csv"
+        mycursor.execute("SELECT Customer.Name,Customer.Email, Customer.PhoneNumber FROM Customer WHERE Customer.ID IN (SELECT CustomerID FROM Invoice WHERE isDeleted is NULl AND Fulfilled = 0)")
+        records = mycursor.fetchall()
+        file = open(fileName, "w")
+
+        add = csv.writer(file)
+
+        # adds the title row of all variables in datasheet
+        add.writerow(['Name', 'Email', 'PhoneNumber'])
+        for rec in records:
+            add.writerow([rec[0], rec[1], rec[2],])
+
+        print("Successfully exported as 'unfulfilledCustomers.csv'")
     else:
         print("Invalid Input. Try Again.")
 

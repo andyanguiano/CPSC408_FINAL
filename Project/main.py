@@ -1,11 +1,10 @@
+#Andy Anguiano
+#CPSC408-01
+#FINAL
+
 import Menus
 
-def runner():
-    print("Test")
-
-
-# Press the green button in the gutter to run the script.
+# Main function
 if __name__ == '__main__':
     print("\n")
     Menus.menu()
-    #Menus.test()
